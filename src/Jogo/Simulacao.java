@@ -1,182 +1,109 @@
 package Jogo;
 
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
 public class Simulacao {
-    Scanner sc = new Scanner(System.in);
-    Random rand = new Random();
+    private static int maxX, maxY;
+    private static Random random = new Random();
 
-    private Exercito exercito1;
-    private Exercito exercito2;
+    public static void simularCombate(Exercito ex1, Exercito ex2, Scanner scanner) {
+        System.out.print("Tamanho máximo do tabuleiro (X): ");
+        maxX = Integer.parseInt(scanner.nextLine());
 
-    private int maxX, maxY;
+        System.out.print("Tamanho máximo do tabuleiro (Y): ");
+        maxY = Integer.parseInt(scanner.nextLine());
 
-    public void iniciar() {
-        System.out.println("=== SIMULAÇÃO DE COMBATE ===");
+        System.out.print("Deseja posicionar manualmente as unidades? (s/n): ");
+        boolean manual = scanner.nextLine().trim().equalsIgnoreCase("s");
 
-        criarExercitos();
+        posicionarUnidades(ex1, scanner, manual);
+        posicionarUnidades(ex2, scanner, manual);
 
-        definirTabuleiro();
+        System.out.print("Número de passos da simulação: ");
+        int passos = Integer.parseInt(scanner.nextLine());
 
-        posicionarUnidades(exercito1);
-        posicionarUnidades(exercito2);
+        for (int passo = 1; passo <= passos; passo++) {
+            System.out.println("\n--- Passo " + passo + " ---");
 
-        executarSimulacao();
+            moverUnidades(ex1);
+            moverUnidades(ex2);
+
+            interacoes(ex1, ex2);
+
+            imprimirEstado(ex1, "Exército 1");
+            imprimirEstado(ex2, "Exército 2");
+
+            if (ex1.estaDerrotado()) {
+                System.out.println("\nExército 1 foi derrotado!");
+                break;
+            } else if (ex2.estaDerrotado()) {
+                System.out.println("\nExército 2 foi derrotado!");
+                break;
+            }
+        }
     }
 
-    private void criarExercitos() {
-        System.out.print("Limite de custo para os exércitos: ");
-        int custoTotal = Integer.parseInt(sc.nextLine());
+    private static void posicionarUnidades(Exercito ex, Scanner scanner, boolean manual) {
+        for (UnidadeMilitar um : ex.getTodasUnidades()) {
+            if (um == null) continue;
 
-        System.out.println("Criar Exército 1");
-        exercito1 = criarExercito(custoTotal);
+            if (manual) {
+                System.out.println("Posicionando unidade: " + um.nome);
+                System.out.print("Posição X (0 a " + maxX + "): ");
+                um.posX = Integer.parseInt(scanner.nextLine());
 
-        System.out.println("Criar Exército 2");
-        exercito2 = criarExercito(custoTotal);
-    }
-
-    private Exercito criarExercito(int custoTotal) {
-        Exercito ex = new Exercito(sc, custoTotal);
-
-        boolean adicionar = true;
-        while (adicionar) {
-            System.out.print("Deseja adicionar unidades? (sim/nao): ");
-            String resp = sc.nextLine().trim().toLowerCase();
-
-            if (resp.equals("sim")) {
-                System.out.print("Tipo da unidade (guerreiro/arqueiro/feiticeiro): ");
-                String tipo = sc.nextLine();
-
-                System.out.print("Quantidade: ");
-                int qtd = Integer.parseInt(sc.nextLine());
-
-                ex.adicionarUnidades(tipo, qtd, sc);
+                System.out.print("Posição Y (0 a " + maxY + "): ");
+                um.posY = Integer.parseInt(scanner.nextLine());
             } else {
-                adicionar = false;
+                um.posX = random.nextInt(maxX + 1);
+                um.posY = random.nextInt(maxY + 1);
             }
         }
-
-        return ex;
     }
 
-    private void definirTabuleiro() {
-        System.out.print("Definir tamanho do tabuleiro - Max X: ");
-        maxX = Integer.parseInt(sc.nextLine());
-
-        System.out.print("Definir tamanho do tabuleiro - Max Y: ");
-        maxY = Integer.parseInt(sc.nextLine());
+    private static void moverUnidades(Exercito ex) {
+        for (UnidadeMilitar um : ex.getTodasUnidades()) {
+            if (um != null && um.estadoUnidade()) {
+                um.moverUnidade();
+            }
+        }
     }
 
-    private void posicionarUnidades(Exercito ex) {
-        System.out.println("Posicionar unidades do exército: " + ex.nome);
+    private static void interacoes(Exercito ex1, Exercito ex2) {
+        for (UnidadeMilitar atacante : ex1.getTodasUnidades()) {
+            if (atacante == null || !atacante.estadoUnidade()) continue;
 
-        System.out.print("Deseja posicionar manualmente ou aleatoriamente? (manual/aleatorio): ");
-        String escolha = sc.nextLine().trim().toLowerCase();
+            for (UnidadeMilitar alvo : ex2.getTodasUnidades()) {
+                if (alvo == null || !alvo.estadoUnidade()) continue;
 
-        if (escolha.equals("manual")) {
-            for (UnidadeMilitar u : ex.getUnidades()) {
-                System.out.println("Posição para unidade: " + u);
-                int x, y;
-
-                while (true) {
-                    System.out.print("X (0 a " + maxX + "): ");
-                    x = Integer.parseInt(sc.nextLine());
-
-                    System.out.print("Y (0 a " + maxY + "): ");
-                    y = Integer.parseInt(sc.nextLine());
-
-                    if (x >= 0 && x <= maxX && y >= 0 && y <= maxY) {
-                        u.setPosicao(x, y);
-                        break;
-                    } else {
-                        System.out.println("Coordenadas inválidas, tente novamente.");
-                    }
+                if (emAlcance(atacante, alvo)) {
+                    alvo.defenderUnidade(atacante.pontosAtaque);
                 }
             }
-        } else { // aleatório
-            for (UnidadeMilitar u : ex.getUnidades()) {
-                int x = rand.nextInt(maxX + 1);
-                int y = rand.nextInt(maxY + 1);
-                u.setPosicao(x, y);
-            }
-            System.out.println("Posicionamento aleatório concluído.");
-        }
-    }
-
-    private void executarSimulacao() {
-        System.out.print("Número de rondas para simular: ");
-        int rondas = Integer.parseInt(sc.nextLine());
-
-        for (int i = 1; i <= rondas; i++) {
-            System.out.println("\n--- Passo " + i + " ---");
-
-            movimentarExercitos();
-
-            processarCombate();
-
-            mostrarEstado();
-
-            if (!exercito1.estadoExercito()) {
-                System.out.println("Exército 2 venceu!");
-                return;
-            }
-            if (!exercito2.estadoExercito()) {
-                System.out.println("Exército 1 venceu!");
-                return;
-            }
-
-            System.out.print("Continuar para a próximo ronda? (sim/nao): ");
-            String resp = sc.nextLine().trim().toLowerCase();
-            if (!resp.equals("sim")) {
-                System.out.println("Simulação encerrada pelo utilizador.");
-                return;
-            }
         }
 
-        System.out.println("Simulação finalizada após " + rondas + " rondas.");
-    }
+        for (UnidadeMilitar atacante : ex2.getTodasUnidades()) {
+            if (atacante == null || !atacante.estadoUnidade()) continue;
 
-    private void movimentarExercitos() {
-        exercito1.moverExercito(maxX, maxY);
-        exercito2.moverExercito(maxX, maxY);
-    }
+            for (UnidadeMilitar alvo : ex1.getTodasUnidades()) {
+                if (alvo == null || !alvo.estadoUnidade()) continue;
 
-    private void processarCombate() {
-        ArrayList<UnidadeMilitar> todasUnidades = new ArrayList<>();
-        todasUnidades.addAll(exercito1.getUnidades());
-        todasUnidades.addAll(exercito2.getUnidades());
-
-        // Para cada unidade, verifica unidades inimigas em alcance e aplica dano
-        for (UnidadeMilitar atacante : todasUnidades) {
-            int danoTotal = 0;
-
-            for (UnidadeMilitar inimigo : todasUnidades) {
-                if (inimigo == atacante) continue;
-
-                boolean inimigosDiferentes =
-                        (exercito1.getUnidades().contains(atacante) && exercito2.getUnidades().contains(inimigo)) ||
-                                (exercito2.getUnidades().contains(atacante) && exercito1.getUnidades().contains(inimigo));
-
-                if (inimigosDiferentes && distancia(atacante, inimigo) <= atacante.getAlcance()) {
-                    danoTotal += inimigo.getAtaque();
+                if (emAlcance(atacante, alvo)) {
+                    alvo.defenderUnidade(atacante.pontosAtaque);
                 }
             }
-
-            atacante.defender(danoTotal);
         }
     }
 
-    private int distancia(UnidadeMilitar a, UnidadeMilitar b) {
-        return Math.abs(a.getX() - b.getX()) + Math.abs(a.getY() - b.getY());
+    private static boolean emAlcance(UnidadeMilitar a, UnidadeMilitar b) {
+        int dx = Math.abs(a.posX - b.posX);
+        int dy = Math.abs(a.posY - b.posY);
+        return dx <= a.alcance && dy <= a.alcance;
     }
 
-    private void mostrarEstado() {
-        System.out.println("Estado do Exército 1:");
-        exercito1.printExercito();
-
-        System.out.println("Estado do Exército 2:");
-        exercito2.printExercito();
+    private static void imprimirEstado(Exercito ex, String nome) {
+        System.out.println("--- Estado do " + nome + " ---");
+        ex.listarUnidades();
     }
 }

@@ -5,22 +5,36 @@ import java.util.Scanner;
 public class Guerreiro extends UnidadeMilitar {
     private int blindagem;
 
-    public Guerreiro(int index, Scanner sc) {
-        super(index, sc);
+    public Guerreiro(Scanner scanner) {
+        super(scanner);
+        setNomeAuto("Guerreiro");
 
         System.out.print("Pontos de blindagem: ");
-        this.blindagem = Integer.parseInt(sc.nextLine());
+        blindagem = Integer.parseInt(scanner.nextLine());
     }
 
     @Override
-    public void defender(int dano) {
-        int danoFinal = dano - (defesa + blindagem);
-        if (danoFinal > 0) vida -= danoFinal;
-        if (vida < 0) vida = 0;
+    public void defenderUnidade(int dano) {
+        // Primeiro blindagem
+        if (blindagem > 0) {
+            int blindagemUsada = Math.min(blindagem, dano);
+            blindagem -= blindagemUsada;
+            dano -= blindagemUsada;
+        }
+        // Depois pontos de defesa
+        if (dano > 0 && pontosDefesa > 0) {
+            int defesaUsada = Math.min(pontosDefesa, dano);
+            pontosDefesa -= defesaUsada;
+            dano -= defesaUsada;
+        }
+        // Finalmente vida
+        if (dano > 0) {
+            pontosVida -= dano;
+        }
     }
 
     @Override
-    public void atacar() {
-        System.out.println(nome + " #" + index + " ataca com espada!");
+    public void printUnidade() {
+        System.out.println("Guerreiro " + nome + " | Vida: " + pontosVida + " | Defesa: " + pontosDefesa + " | Blindagem: " + blindagem + " | Posição: (" + posX + "," + posY + ")");
     }
 }

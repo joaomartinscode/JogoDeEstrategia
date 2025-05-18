@@ -1,119 +1,114 @@
 package Jogo;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
 
 public class Exercito {
-    protected String nome;
-    protected int custoAtual;
-    private int nGuerreiros = 0, nArqueiros = 0, nFeiticeiros = 0;
-    private final ArrayList<UnidadeMilitar> exercito = new ArrayList<>();
+    private List<UnidadeMilitar> unidades = new ArrayList<>();
+    private int custoMaximo;
 
-    public Exercito(Scanner keyboard, int custoTotal){
-        System.out.print("Digite o nome do Exercito: ");
-        nome = keyboard.nextLine();
-        custoAtual = custoTotal;
+    public Exercito(int custoMaximo) {
+        this.custoMaximo = custoMaximo;
     }
 
-    public void adicionarUnidades(String tipo, int quantidade, Scanner sc) {
-        for (int i = 0; i < quantidade; i++) {
-            int index = encontrarMenorIndexGlobal();
-            UnidadeMilitar nova;
+    public boolean adicionarUnidade(UnidadeMilitar unidade) {
+        int custoAtual = calcularCustoTotal();
+        if (custoAtual + unidade.custoProd > custoMaximo) {
+            System.out.println("Custo excede o limite do exército!");
+            return false;
+        }
 
-            switch (tipo.toLowerCase()) {
-                case "guerreiro":
-                    nova = new Guerreiro(index, sc);
-                    break;
-                case "arqueiro":
-                    nova = new Arqueiro(index, sc);
-                    break;
-                case "feiticeiro":
-                    nova = new Feiticeiro(index, sc);
-                    break;
-                default:
-                    System.out.println("Tipo inválido: " + tipo);
-                    return;
-            }
-
-            if (custoAtual >= nova.getCusto()) {
-                exercito.add(nova);
-                custoAtual -= nova.getCusto();
-                System.out.println("Unidade adicionada: " + tipo + " com índice " + index);
-            } else {
-                System.out.println("Custo insuficiente para adicionar a unidade.");
+        // Reaproveitar espaço vazio (null)
+        for (int i = 0; i < unidades.size(); i++) {
+            if (unidades.get(i) == null) {
+                unidades.set(i, unidade);
+                return true;
             }
         }
+
+        unidades.add(unidade);
+        return true;
     }
 
-    private int encontrarMenorIndexGlobal() {
-        ArrayList<Integer> usados = new ArrayList<>();
-
-        for (UnidadeMilitar u : exercito) {
-            usados.add(u.getIndex());
+    public void removerUnidade(int indice) {
+        if (indice >= 0 && indice < unidades.size() && unidades.get(indice) != null) {
+            UnidadeMilitar um = unidades.get(indice);
+            UnidadeMilitar.liberarId(um.id);
+            unidades.set(indice, null);
+            System.out.println("Unidade removida.");
+        } else {
+            System.out.println("Índice inválido.");
         }
-
-        Collections.sort(usados);
-
-        int esperado = 0;
-        for (int usado : usados) {
-            if (usado > esperado) break;
-            if (usado == esperado) esperado++;
-        }
-
-        return esperado;
     }
 
 
-    public void removerUnidade(int index) {
-        Iterator<UnidadeMilitar> it = exercito.iterator();
-        while (it.hasNext()) {
-            UnidadeMilitar u = it.next();
-            if (u.getIndex() == index) {
-                it.remove();
-                System.out.println("Unidade com índice " + index + " removida.");
+    public void listarUnidades() {
+        boolean vazia = true;
+        for (int i = 0; i < unidades.size(); i++) {
+            UnidadeMilitar u = unidades.get(i);
+            if (u != null) {
+                System.out.print((i + 1) + " - ");
+                u.printUnidade();
+                vazia = false;
+            }
+        }
+        if (vazia) System.out.println("Exército sem unidades.");
+    }
+
+    public boolean estaDerrotado() {
+        for (UnidadeMilitar u : unidades) {
+            if (u != null && u.estadoUnidade()) return false;
+        }
+        return true;
+    }
+
+    public int calcularCustoTotal() {
+        int total = 0;
+        for (UnidadeMilitar u : unidades) {
+            if (u != null) total += u.custoProd;
+        }
+        return total;
+    }
+
+    public List<UnidadeMilitar> getUnidadesAtivas() {
+        List<UnidadeMilitar> ativas = new ArrayList<>();
+        for (UnidadeMilitar u : unidades) {
+            if (u != null && u.estadoUnidade()) ativas.add(u);
+        }
+        return ativas;
+    }
+
+    public List<UnidadeMilitar> getTodasUnidades() {
+        return unidades;
+    }
+
+    public void adicionarUnidade(Scanner scanner) {
+        System.out.println("Escolha o tipo de unidade:");
+        System.out.println("1 - Guerreiro");
+        System.out.println("2 - Arqueiro");
+        System.out.println("3 - Feiticeiro");
+        String escolha = scanner.nextLine();
+
+        UnidadeMilitar novaUnidade = null;
+
+        switch (escolha) {
+            case "1":
+                novaUnidade = new Guerreiro(scanner);
+                break;
+            case "2":
+                novaUnidade = new Arqueiro(scanner);
+                break;
+            case "3":
+                novaUnidade = new Feiticeiro(scanner);
+                break;
+            default:
+                System.out.println("Tipo inválido.");
                 return;
-            }
         }
-        System.out.println("Nenhuma unidade encontrada com o índice " + index);
-    }
 
-    public void moverExercito(){
-        for(UnidadeMilitar u : exercito){
-            u.mover();
-        }
-    }
-
-    public void atacarExercito(){
-        for(UnidadeMilitar u : exercito){
-            u.atacar();
-        }
-    }
-
-    public void defenderExercito(int dano){
-        for (UnidadeMilitar u : exercito) {
-            u.defender(dano);
-        }
-    }
-
-    public boolean estadoExercito(){
-        System.out.println("Exercito: " + nome);
-        for(UnidadeMilitar u : exercito){
-           if (u.estadoUnidade()){
-               return true;
-           }
-        }
-        return false;
-    }
-
-    public ArrayList<UnidadeMilitar> getUnidades() {
-        return exercito;
-    }
-
-    public void printExercito(){
-        for (UnidadeMilitar u : exercito) {
-            u.printUnidade();
+        if (novaUnidade != null) {
+            adicionarUnidade(novaUnidade);
         }
     }
 }

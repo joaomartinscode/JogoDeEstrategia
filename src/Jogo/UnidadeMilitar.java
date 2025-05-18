@@ -1,83 +1,92 @@
 package Jogo;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
-public abstract class UnidadeMilitar {
-    protected final int index;
+public abstract class UnidadeMilitar implements UnidadeMilitarI {
+    private static int contadorGlobal = 0;
+    private static final ArrayList<Integer> indices = new ArrayList<>();
+
     protected String nome;
-    protected int custo;
-    protected int vida;
-    protected int ataque;
-    protected int defesa;
-    protected int alcance;
-    protected int velocidade;
-    protected int x;
-    protected int y;
+    protected int custoProd, pontosVida, pontosAtaque, pontosDefesa, alcance;
+    protected int posX, posY, velocidade;
+    protected int id;
 
-    public UnidadeMilitar(int index, Scanner sc) {
-        this.index = index;
+    public UnidadeMilitar(Scanner scanner) {
+        this.id = gerarId();
 
-        System.out.print("Nome: ");
-        this.nome = sc.nextLine();
-
+        // Coleta dados comuns
         System.out.print("Custo de produção: ");
-        this.custo = Integer.parseInt(sc.nextLine());
+        custoProd = Integer.parseInt(scanner.nextLine());
 
         System.out.print("Pontos de vida: ");
-        this.vida = Integer.parseInt(sc.nextLine());
+        pontosVida = Integer.parseInt(scanner.nextLine());
 
         System.out.print("Pontos de ataque: ");
-        this.ataque = Integer.parseInt(sc.nextLine());
+        pontosAtaque = Integer.parseInt(scanner.nextLine());
 
         System.out.print("Pontos de defesa: ");
-        this.defesa = Integer.parseInt(sc.nextLine());
+        pontosDefesa = Integer.parseInt(scanner.nextLine());
 
         System.out.print("Alcance: ");
-        this.alcance = Integer.parseInt(sc.nextLine());
+        alcance = Integer.parseInt(scanner.nextLine());
 
         System.out.print("Velocidade: ");
-        this.velocidade = Integer.parseInt(sc.nextLine());
+        velocidade = Integer.parseInt(scanner.nextLine());
 
-        this.x = 0;
-        this.y = 0;
+        System.out.print("Posição X: ");
+        posX = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("Posição Y: ");
+        posY = Integer.parseInt(scanner.nextLine());
     }
 
-    public abstract void atacar();
-
-    public void defender(int dano) {
-        int danoFinal = dano - defesa;
-        if (danoFinal > 0) vida -= danoFinal;
-        if (vida < 0) vida = 0;
+    private static int gerarId() {
+        if (!indices.isEmpty()) {
+            int menorIndice = indices.getFirst();
+            for (int i = 1; i < indices.size(); i++) {
+                if (indices.get(i) < menorIndice) {
+                    menorIndice = indices.get(i);
+                }
+            }
+            indices.remove(Integer.valueOf(menorIndice));
+            return menorIndice;
+        }
+        return ++contadorGlobal;
     }
 
-    public boolean estadoUnidade() {
-        return vida > 0;
+    public static void liberarId(int id) {
+        indices.add(id);
     }
 
-    public void mover(int maxX, int maxY) {
-        int dx = (Math.random() < 0.5 ? -1 : 1) * velocidade;
-        int dy = (Math.random() < 0.5 ? -1 : 1) * velocidade;
-        x = Math.max(0, Math.min(x + dx, maxX));
-        y = Math.max(0, Math.min(y + dy, maxY));
-    }
-
-    public void setPosicao(int x, int y) {
-        this.x = x;
-        this.y = y;
+    protected void setNomeAuto(String tipo) {
+        this.nome = tipo + id;
     }
 
     @Override
-    public String toString() {
-        return nome + " #" + index + " | Vida: " + vida + " | Pos: (" + x + "," + y + ")";
+    public void moverUnidade() {
+        posX += (int)(Math.random() * (velocidade + 1));
+        posY += (int)(Math.random() * (velocidade + 1));
     }
 
-    public int getIndex() { return index; }
-    public int getCusto() { return custo; }
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getAlcance() { return alcance; }
-    public int getAtaque() { return ataque; }
+    @Override
+    public void atacarUnidade(UnidadeMilitar alvo) {
+        int distancia = Math.abs(this.posX - alvo.posX) + Math.abs(this.posY - alvo.posY);
+        if (distancia <= this.alcance) {
+            System.out.println(this.nome + " atacando " + alvo.nome);
+            alvo.defenderUnidade(this.pontosAtaque);
+        } else {
+            System.out.println(this.nome + " não está no alcance para atacar " + alvo.nome);
+        }
+    }
+
+    @Override
+    public boolean estadoUnidade() {
+        return pontosVida > 0;
+    }
+
+    public abstract void defenderUnidade(int dano);
+    public abstract void printUnidade();
+
+
 }
-
-
-

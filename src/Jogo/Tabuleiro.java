@@ -1,16 +1,26 @@
 package Jogo;
 
 public class Tabuleiro {
-    private int maxX;
-    private int maxY;
+    private int largura;
+    private int altura;
 
-    public Tabuleiro(int maxX, int maxY) {
-        this.maxX = maxX;
-        this.maxY = maxY;
+    public Tabuleiro(int largura, int altura) {
+        this.largura = largura;
+        this.altura = altura;
     }
 
-    public int getMaxX() { return maxX; }
-    public int getMaxY() { return maxY; }
+    public boolean posicaoValida(int x, int y) {
+        return x >= 0 && x < largura && y >= 0 && y < altura;
+    }
+
+    public int getLargura() {
+        return largura;
+    }
+
+    public int getAltura() {
+        return altura;
+    }
 }
+
 
 
