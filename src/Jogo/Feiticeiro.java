@@ -1,32 +1,26 @@
 package Jogo;
 
+import Utils.InputValidation;
+
 import java.util.Scanner;
 
 public class Feiticeiro extends UnidadeMilitar {
-    private int maxFeiticos, feiticosUsados = 0;
+    protected int maxFeiticos, feiticosUsados = 0;
 
     public Feiticeiro(Scanner scanner) {
         super(scanner);
         setNomeAuto("Feiticeiro");
 
-        System.out.print("Número máximo de feitiços: ");
-        maxFeiticos = Integer.parseInt(scanner.nextLine());
+        maxFeiticos = InputValidation.validateIntGT0(scanner, "Número máximo de feitiços: ");
     }
 
     @Override
     public void atacarUnidade(UnidadeMilitar alvo) {
-        int distancia = Math.abs(this.posX - alvo.posX) + Math.abs(this.posY - alvo.posY);
-        if (distancia <= this.alcance) {
-            System.out.println(this.nome + " atacando " + alvo.nome);
-            // Suponhamos que cada feitiço causa pontosAtaque de dano e que tem um limite de feitiços
-            if (maxFeiticos > 0) {
-                alvo.defenderUnidade(this.pontosAtaque);
-                maxFeiticos--;
-            } else {
-                System.out.println(this.nome + " não tem feitiços restantes para atacar.");
-            }
+        if (maxFeiticos > 0) {
+            super.atacarUnidade(alvo);  // reutiliza a lógica de distância e ataque
+            maxFeiticos--;
         } else {
-            System.out.println(this.nome + " não está no alcance para atacar " + alvo.nome);
+            System.out.println(nome + " não tem feitiços restantes para atacar.");
         }
     }
 
@@ -43,16 +37,10 @@ public class Feiticeiro extends UnidadeMilitar {
         }
     }
 
-    public boolean podeLancarFeitico() {
-        return feiticosUsados < maxFeiticos;
-    }
-
-    public void usarFeitico() {
-        feiticosUsados++;
-    }
-
     @Override
     public void printUnidade() {
-        System.out.println("Feiticeiro " + nome + " | Vida: " + pontosVida + " | Defesa: " + pontosDefesa + " | Feitiços usados: " + feiticosUsados + "/" + maxFeiticos + " | Posição: (" + posX + "," + posY + ")");
+        System.out.println(nome + " | Vida: " + pontosVida + " | Defesa: " + pontosDefesa +
+                " | Feitiços usados: " + feiticosUsados + "/" + maxFeiticos +
+                " | Posição: (" + posX + "," + posY + ")");
     }
 }

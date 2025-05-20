@@ -1,5 +1,7 @@
 package Jogo;
 
+import Utils.InputValidation;
+
 import java.util.Scanner;
 
 public class Main {
@@ -8,13 +10,12 @@ public class Main {
     private static Exercito exercito2;
 
     public static void main(String[] args) {
-        inicializarExercitos();
+        inicializarExercito();
         menuPrincipal();
     }
 
-    private static void inicializarExercitos() {
-        System.out.print("Defina o custo máximo para ambos os exércitos: ");
-        int custoMaximo = lerInteiro();
+    private static void inicializarExercito() {
+        int custoMaximo = InputValidation.validateIntGT0(scanner, "Defina o custo máximo para ambos os exércitos: ");
         exercito1 = new Exercito(custoMaximo);
         exercito2 = new Exercito(custoMaximo);
     }
@@ -24,21 +25,25 @@ public class Main {
             System.out.println("\n=== Menu Principal ===");
             System.out.println("1. Gerenciar Exército 1");
             System.out.println("2. Gerenciar Exército 2");
-            System.out.println("3. Simular Combate");
+            System.out.println("3. Ver Estado dos Exércitos");
+            System.out.println("4. Simular Combate");
             System.out.println("0. Sair");
-            System.out.print("Escolha uma opção: ");
 
-            switch (scanner.nextLine().trim()) {
-                case "1":
+            switch (InputValidation.validateIntBetween(scanner, ":> ", 0, 4)) {
+                case 1:
                     menuExercito(exercito1, "Exército 1");
                     break;
-                case "2":
+                case 2:
                     menuExercito(exercito2, "Exército 2");
                     break;
-                case "3":
-                    menuSimulacao();
+                case 3:
+                    exercito1.imprimirEstado("Exército 1");
+                    exercito2.imprimirEstado("Exército 2");
                     break;
-                case "0":
+                case 4:
+                    Simular.simularCombate(exercito1, exercito2, scanner);
+                    break;
+                case 0:
                     System.out.println("Programa encerrado.");
                     scanner.close();
                     return;
@@ -55,24 +60,18 @@ public class Main {
             System.out.println("2. Listar unidades");
             System.out.println("3. Remover unidade");
             System.out.println("0. Voltar ao menu principal");
-            System.out.print("Escolha uma opção: ");
 
-            switch (scanner.nextLine().trim()) {
-                case "1":
+            switch (InputValidation.validateIntBetween(scanner, ":> ", 0, 3)) {
+                case 1:
                     exercito.adicionarUnidade(scanner);
                     break;
-                case "2":
+                case 2:
                     exercito.listarUnidades();
                     break;
-                case "3":
-                    exercito.listarUnidades();
-                    if (!exercito.getTodasUnidades().isEmpty()) {
-                        System.out.print("Índice da unidade a remover: ");
-                        int indice = lerInteiro() - 1;
-                        exercito.removerUnidade(indice);
-                    }
+                case 3:
+                    exercito.removerUnidade(scanner);
                     break;
-                case "0":
+                case 0:
                     return;
                 default:
                     System.out.println("Opção inválida.");
@@ -80,22 +79,4 @@ public class Main {
         }
     }
 
-    private static void menuSimulacao() {
-        if (exercito1.getTodasUnidades().isEmpty() || exercito2.getTodasUnidades().isEmpty()) {
-            System.out.println("Ambos os exércitos devem ter pelo menos uma unidade para iniciar a simulação.");
-            return;
-        }
-
-        Simulacao.simularCombate(exercito1, exercito2, scanner);
-    }
-
-    private static int lerInteiro() {
-        while (true) {
-            try {
-                return Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.print("Entrada inválida. Digite um número inteiro: ");
-            }
-        }
-    }
 }

@@ -1,16 +1,16 @@
 package Jogo;
 
+import Utils.InputValidation;
+
 import java.util.Scanner;
 
 public class Guerreiro extends UnidadeMilitar {
-    private int blindagem;
+    protected int blindagem;
 
     public Guerreiro(Scanner scanner) {
         super(scanner);
         setNomeAuto("Guerreiro");
-
-        System.out.print("Pontos de blindagem: ");
-        blindagem = Integer.parseInt(scanner.nextLine());
+        blindagem = InputValidation.validateIntGT0(scanner, "Pontos de blindagem: ");
     }
 
     @Override
@@ -35,6 +35,7 @@ public class Guerreiro extends UnidadeMilitar {
 
     @Override
     public void printUnidade() {
-        System.out.println("Guerreiro " + nome + " | Vida: " + pontosVida + " | Defesa: " + pontosDefesa + " | Blindagem: " + blindagem + " | Posição: (" + posX + "," + posY + ")");
+        System.out.println(nome + " | Vida: " + pontosVida + " | Defesa: " + pontosDefesa + " | Blindagem: "
+                + blindagem + " | Posição: (" + posX + "," + posY + ")");
     }
 }

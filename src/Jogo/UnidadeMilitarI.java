@@ -1,7 +1,7 @@
 package Jogo;
 
 public interface UnidadeMilitarI {
-    void moverUnidade();
+    void moverUnidade(Tabuleiro tabuleiro);
     void atacarUnidade(UnidadeMilitar alvo);
     void defenderUnidade(int dano);
     boolean estadoUnidade();

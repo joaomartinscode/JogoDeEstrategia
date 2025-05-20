@@ -3,8 +3,8 @@ package Jogo;
 import java.util.Scanner;
 
 public class Arqueiro extends UnidadeMilitar {
-    private String armamento;
-    private int bonusAtaque = 0;
+    protected String armamento;
+    protected int bonusAtaque = 0;
 
     public Arqueiro(Scanner scanner) {
         super(scanner);
@@ -42,6 +42,7 @@ public class Arqueiro extends UnidadeMilitar {
 
     @Override
     public void printUnidade() {
-        System.out.println("Arqueiro " + nome + " | Armamento: " + armamento + " | Vida: " + pontosVida + " | Defesa: " + pontosDefesa + " | Posição: (" + posX + "," + posY + ")");
+        System.out.println(nome + " | Armamento: " + armamento + " | Vida: " + pontosVida +
+                " | Defesa: " + pontosDefesa + " | Posição: (" + posX + "," + posY + ")");
     }
 }

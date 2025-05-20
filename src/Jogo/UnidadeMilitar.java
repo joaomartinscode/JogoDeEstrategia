@@ -1,5 +1,7 @@
 package Jogo;
 
+import Utils.InputValidation;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -16,41 +18,26 @@ public abstract class UnidadeMilitar implements UnidadeMilitarI {
         this.id = gerarId();
 
         // Coleta dados comuns
-        System.out.print("Custo de produção: ");
-        custoProd = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Pontos de vida: ");
-        pontosVida = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Pontos de ataque: ");
-        pontosAtaque = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Pontos de defesa: ");
-        pontosDefesa = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Alcance: ");
-        alcance = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Velocidade: ");
-        velocidade = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Posição X: ");
-        posX = Integer.parseInt(scanner.nextLine());
-
-        System.out.print("Posição Y: ");
-        posY = Integer.parseInt(scanner.nextLine());
+        custoProd = InputValidation.validateIntGT0(scanner, "Custo de produção: ");
+        pontosVida = InputValidation.validateIntGT0(scanner, "Pontos de vida: ");
+        pontosAtaque = InputValidation.validateIntGT0(scanner, "Pontos de ataque: ");
+        pontosDefesa = InputValidation.validateIntGT0(scanner, "Pontos de defesa: ");
+        alcance = InputValidation.validateIntGT0(scanner, "Alcance: ");
+        velocidade = InputValidation.validateIntGT0(scanner, "Velocidade: ");
+        posX = 0;
+        posY = 0;
     }
 
     private static int gerarId() {
         if (!indices.isEmpty()) {
-            int menorIndice = indices.getFirst();
+            int menorIndex = indices.getFirst();
             for (int i = 1; i < indices.size(); i++) {
-                if (indices.get(i) < menorIndice) {
-                    menorIndice = indices.get(i);
+                if (indices.get(i) < menorIndex) {
+                    menorIndex = indices.get(i);
                 }
             }
-            indices.remove(Integer.valueOf(menorIndice));
-            return menorIndice;
+            indices.remove(Integer.valueOf(menorIndex));
+            return menorIndex;
         }
         return ++contadorGlobal;
     }
@@ -64,16 +51,27 @@ public abstract class UnidadeMilitar implements UnidadeMilitarI {
     }
 
     @Override
-    public void moverUnidade() {
-        posX += (int)(Math.random() * (velocidade + 1));
-        posY += (int)(Math.random() * (velocidade + 1));
+    public void moverUnidade(Tabuleiro tabuleiro) {
+        int deslocaX = (int) (Math.random() * (2 * velocidade + 1)) - velocidade;
+        int deslocaY = (int) (Math.random() * (2 * velocidade + 1)) - velocidade;
+
+        int novaX = posX + deslocaX;
+        int novaY = posY + deslocaY;
+
+        // Ajustar para bordas do tabuleiro
+        novaX = Math.max(0, Math.min(novaX, tabuleiro.getLargura() - 1));
+        novaY = Math.max(0, Math.min(novaY, tabuleiro.getAltura() - 1));
+
+        posX = novaX;
+        posY = novaY;
+        System.out.println(nome + " moveu-se para (" + posX + ", " + posY + ")");
     }
 
     @Override
     public void atacarUnidade(UnidadeMilitar alvo) {
         int distancia = Math.abs(this.posX - alvo.posX) + Math.abs(this.posY - alvo.posY);
         if (distancia <= this.alcance) {
-            System.out.println(this.nome + " atacando " + alvo.nome);
+            System.out.println(this.nome + " está a atacar o " + alvo.nome);
             alvo.defenderUnidade(this.pontosAtaque);
         } else {
             System.out.println(this.nome + " não está no alcance para atacar " + alvo.nome);
@@ -87,6 +85,5 @@ public abstract class UnidadeMilitar implements UnidadeMilitarI {
 
     public abstract void defenderUnidade(int dano);
     public abstract void printUnidade();
-
 
 }
